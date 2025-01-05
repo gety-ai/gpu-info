@@ -123,6 +123,7 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "specta",
+ "specta-util",
  "test-log",
  "thiserror 2.0.9",
 ]
@@ -319,6 +320,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "specta-util"
+version = "0.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8113d65b58a6de3184b01d6df9e50b6d4bbe7f724251f576d84f23228824456"
+dependencies = [
+ "serde",
+ "specta",
 ]
 
 [[package]]
