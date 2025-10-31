@@ -1,7 +1,12 @@
 [package]
 name = "gpu-info"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+license = "MIT"
+description = "Retrieve GPU information from `Vulkan` or `Metal` API."
+authors = ["Jonson Petard <a632079@gmail.com>"]
+repository = "https://github.com/gety-ai/gpu-info"
+documentation = "https://docs.rs/gpu-info"
 
 [features]
 default = ["serde"]
@@ -21,7 +26,7 @@ scopeguard = "1"
 # winit = "0.30"
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-ash = "0.38.0" # Vulkan
+ash = "0.38" # Vulkan
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.3"
