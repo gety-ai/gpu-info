@@ -9,16 +9,25 @@ serde = ["dep:serde"]
 specta = ["dep:specta", "specta/derive"]
 
 [dependencies]
-ash = "0.38.0"
 thiserror = "2"
 log = "0.4"
 serde = { version = "1", features = ["derive"], optional = true }
 specta = { version = "=2.0.0-rc.22", optional = true }
+scopeguard = "1"
 # OpenGL related
 # glutin = "0.32.1"
 # gl = "0.14.0"
 # raw-window-handle = "0.6"
 # winit = "0.30"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+ash = "0.38.0" # Vulkan
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.3"
+objc2-core-foundation = "0.3.2"
+objc2-metal = "0.3.2"
+objc2-io-kit = "0.3.2"
 
 [dev-dependencies]
 test-log = "0.2"
