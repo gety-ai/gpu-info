@@ -8,6 +8,12 @@ pub enum MetalError {
     NotSupported,
 }
 
+impl MetalError {
+    pub fn is_not_supported(&self) -> bool {
+        matches!(self, MetalError::NotSupported)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct MetalGpu {
     pub kind: GPUKind,

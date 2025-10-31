@@ -1,11 +1,28 @@
+use std::ffi::CStr;
+
+use crate::{GPUKind, GPU};
 use ash::vk;
+
+#[derive(Debug, thiserror::Error)]
+pub enum VulkanError {
+    #[error("Vulkan is not supported on this platform")]
+    NotSupported,
+    #[error("Failed to perform Vulkan operation: {0}")]
+    OperationFailed(String),
+}
+
+impl VulkanError {
+    pub fn is_not_supported(&self) -> bool {
+        matches!(self, VulkanError::NotSupported)
+    }
+}
 
 pub fn is_vulkan_supported() -> bool {
     unsafe { ash::Entry::load().is_ok() }
 }
 
-pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, Error> {
-    let entry = unsafe { ash::Entry::load() }.map_err(|_| Error::VulkanNotSupported)?;
+pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, VulkanError> {
+    let entry = unsafe { ash::Entry::load() }.map_err(|_| VulkanError::NotSupported)?;
     let app_name = c"GPUInfoApp";
     let app_info = vk::ApplicationInfo::default()
         .application_name(app_name)
@@ -16,13 +33,13 @@ pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, Error> {
 
     let create_info = vk::InstanceCreateInfo::default().application_info(&app_info);
     let instance = unsafe { entry.create_instance(&create_info, None) }
-        .map_err(|e| Error::VulkanOperationFailed(e.to_string()))?;
+        .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
 
     let physical_devices = unsafe { instance.enumerate_physical_devices() }
-        .map_err(|e| Error::VulkanOperationFailed(e.to_string()))?;
+        .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
 
     if physical_devices.is_empty() {
-        return Err(Error::VulkanOperationFailed(
+        return Err(VulkanError::OperationFailed(
             "No Vulkan-compatible GPUs found.".to_string(),
         ));
     }
@@ -99,7 +116,7 @@ mod tests {
         eprintln!("{:#?}", result);
         assert!(match result {
             Ok(gpus) => !gpus.is_empty(),
-            Err(e) => e.is_vulkan_not_supported(),
+            Err(e) => e.is_not_supported(),
         });
     }
 }

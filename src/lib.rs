@@ -21,24 +21,13 @@ pub use vulkan::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Failed to perform Vulkan operation: {0}")]
-    VulkanOperationFailed(String),
-    #[error("Vulkan is not supported on this platform")]
-    VulkanNotSupported,
-    #[error("Failed to create OpenGL context")]
-    OpenGLContextCreationFailed,
-    #[error("Failed to query GPU info")]
-    OpenGLQueryFailed,
+    #[cfg(not(target_os = "macos"))]
+    #[error("failed to query vulkan api: {0}")]
+    Vulkan(#[from] vulkan::VulkanError),
 
     #[cfg(target_os = "macos")]
     #[error("failed to query metal api: {0}")]
     Metal(#[from] metal::MetalError),
-}
-
-impl Error {
-    pub fn is_vulkan_not_supported(&self) -> bool {
-        matches!(self, Error::VulkanNotSupported)
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,7 +76,7 @@ pub fn retrieve_gpu_info() -> Result<Vec<GPU>, Error> {
         .collect::<Vec<GPU>>();
 
     #[cfg(not(target_os = "macos"))]
-    let gpus = Vec::new();
+    let gpus = retrieve_gpu_info_via_vk()?;
 
     Ok(gpus)
 }
