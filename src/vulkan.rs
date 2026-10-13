@@ -34,6 +34,9 @@ pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, VulkanError> {
     let create_info = vk::InstanceCreateInfo::default().application_info(&app_info);
     let instance = unsafe { entry.create_instance(&create_info, None) }
         .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
+    scopeguard::defer! {
+        unsafe { instance.destroy_instance(None) };
+    }
 
     let physical_devices = unsafe { instance.enumerate_physical_devices() }
         .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
