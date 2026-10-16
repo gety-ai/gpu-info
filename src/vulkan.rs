@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use crate::{GPUKind, GPU};
+use crate::{vendor_name, GPUKind, GPU};
 use ash::vk;
 
 #[derive(Debug, thiserror::Error)]
@@ -34,6 +34,9 @@ pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, VulkanError> {
     let create_info = vk::InstanceCreateInfo::default().application_info(&app_info);
     let instance = unsafe { entry.create_instance(&create_info, None) }
         .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
+    scopeguard::defer! {
+        unsafe { instance.destroy_instance(None) };
+    }
 
     let physical_devices = unsafe { instance.enumerate_physical_devices() }
         .map_err(|e| VulkanError::OperationFailed(e.to_string()))?;
@@ -56,14 +59,7 @@ pub fn retrieve_gpu_info_via_vk() -> Result<Vec<GPU>, VulkanError> {
             .unwrap_or("Unknown")
             .to_string();
 
-        let vendor_id = properties.vendor_id;
-        let vendor_name = match vendor_id {
-            0x8086 => "Intel",
-            0x10DE => "NVIDIA",
-            0x1002 => "AMD",
-            _ => "Unknown",
-        }
-        .to_string();
+        let vendor_name = vendor_name(properties.vendor_id).to_string();
 
         let driver_version = format!(
             "{}.{}.{}",

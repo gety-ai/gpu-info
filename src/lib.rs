@@ -1,12 +1,17 @@
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 mod vulkan;
+
+#[cfg(windows)]
+mod dxgi;
 
 #[cfg(target_os = "macos")]
 mod metal;
 
+#[cfg(windows)]
+pub use dxgi::*;
 #[cfg(target_os = "macos")]
 pub use metal::*;
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 pub use vulkan::*;
 
 // OpenGL related
@@ -21,9 +26,13 @@ pub use vulkan::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     #[error("failed to query vulkan api: {0}")]
     Vulkan(#[from] vulkan::VulkanError),
+
+    #[cfg(windows)]
+    #[error("failed to query dxgi api: {0}")]
+    Dxgi(#[from] dxgi::DxgiError),
 
     #[cfg(target_os = "macos")]
     #[error("failed to query metal api: {0}")]
@@ -75,10 +84,24 @@ pub fn retrieve_gpu_info() -> Result<Vec<GPU>, Error> {
         .map(|g| g.into())
         .collect::<Vec<GPU>>();
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    let gpus = retrieve_gpu_info_via_dxgi()?;
+
+    #[cfg(not(any(target_os = "macos", windows)))]
     let gpus = retrieve_gpu_info_via_vk()?;
 
     Ok(gpus)
+}
+
+/// Maps a PCI vendor ID to the vendor name.
+#[cfg(not(target_os = "macos"))]
+fn vendor_name(vendor_id: u32) -> &'static str {
+    match vendor_id {
+        0x8086 => "Intel",
+        0x10DE => "NVIDIA",
+        0x1002 | 0x1022 => "AMD",
+        _ => "Unknown",
+    }
 }
 
 // pub fn retrieve_gpu_info_via_gl() -> Result<Vec<GPU>, Error> {

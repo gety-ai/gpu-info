@@ -1,3 +1,3 @@
 # Gpu Info
 
-Retrieve GPU information from `Vulkan` or `Metal` API.
+Retrieve GPU information from `DXGI` (Windows), `Vulkan` or `Metal` (macOS) API.
